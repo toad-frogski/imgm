@@ -1,7 +1,7 @@
 package image
 
 import (
-	"encoding/json"
+	"bufio"
 	"fmt"
 	"image"
 	"image/color"
@@ -61,8 +61,10 @@ func loadColors(schemaP string) ([]color.Color, error) {
 	}
 
 	var hexColors []string
-	if err = json.NewDecoder(f).Decode(&hexColors); err != nil {
-		return nil, err
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		hexColors = append(hexColors, scanner.Text())
 	}
 
 	colors := make([]color.Color, 0, len(hexColors))

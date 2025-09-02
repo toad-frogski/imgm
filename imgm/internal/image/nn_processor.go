@@ -1,11 +1,9 @@
 package image
 
 import (
-	"cmp"
 	"image"
 	"image/color"
 	"math"
-	"slices"
 )
 
 type NNProcessor struct {
@@ -17,22 +15,23 @@ func (nn *NNProcessor) convert(pixel color.Color) color.Color {
 		return pixel
 	}
 
-	nearest := slices.MinFunc(nn.colorSchema, func(a, b color.Color) int {
-		return cmp.Compare(nn.distance(pixel, a), nn.distance(pixel, b))
-	})
+	r0, g0, b0, _ := pixel.RGBA()
+	minDist := float64(math.MaxFloat64)
+	var nearest color.Color
+
+	for _, c := range nn.colorSchema {
+		r, g, b, _ := c.RGBA()
+		dr := float64(r0) - float64(r)
+		dg := float64(g0) - float64(g)
+		db := float64(b0) - float64(b)
+		dist2 := dr*dr + dg*dg + db*db
+		if dist2 < minDist {
+			minDist = dist2
+			nearest = c
+		}
+	}
 
 	return nearest
-}
-
-func (nn *NNProcessor) distance(c1, c2 color.Color) float64 {
-	r1, g1, b1, _ := c1.RGBA()
-	r2, g2, b2, _ := c2.RGBA()
-
-	dr := float64(r1) - float64(r2)
-	dg := float64(g1) - float64(g2)
-	db := float64(b1) - float64(b2)
-
-	return math.Sqrt(dr*dr + dg*dg + db*db)
 }
 
 func (nn *NNProcessor) Process(img image.Image) image.Image {
